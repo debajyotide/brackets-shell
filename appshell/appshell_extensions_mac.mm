@@ -552,6 +552,47 @@ int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
     return ConvertNSErrorCode(error, true);
 }
 
+int32 GetFileInFolderInfo(ExtensionString path, CefRefPtr<CefListValue>& directoryContents)
+{
+    NSString* pathStr = [NSString stringWithUTF8String:path.c_str()];
+    NSError* error = nil;
+    
+    if ([pathStr length] == 0) {
+        return ERR_INVALID_PARAMS;
+    }
+    
+    NSArray* contents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:pathStr error:&error];
+    
+    if (contents != nil)
+    {
+        int size = [contents count];
+
+        for (int i = 0 ;i<size;i++)
+        {
+            id myArrayElement = [contents objectAtIndex:i];
+            ExtensionString fileName = [myArrayElement UTF8String];
+            ExtensionString fullFileName = ExtensionString([[pathStr stringByAppendingString:myArrayElement] UTF8String]);
+            int32 fileInfoError = NO_ERROR;
+            ExtensionString realPath;
+            uint32 modTime;
+            double size;
+            bool isDir;
+            fileInfoError = GetFileInfo(fullFileName, modTime, isDir, size, realPath);
+            CefRefPtr<CefListValue> argsDict = CefListValue::Create();
+            argsDict->SetInt(0, modTime);
+            argsDict->SetBool(1, !isDir);
+            argsDict->SetBool(2, isDir);
+            argsDict->SetInt(3, size);
+            argsDict->SetString(4, realPath);
+            argsDict->SetString(5, fileName);
+            directoryContents->SetList(i, argsDict);
+        }
+        return NO_ERROR;
+    }
+    
+    return ConvertNSErrorCode(error, true);
+}
+
 int32 MakeDir(ExtensionString path, int32 mode)
 {
     NSError* error = nil;

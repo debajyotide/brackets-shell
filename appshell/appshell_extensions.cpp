@@ -37,7 +37,7 @@
 #include "update.h"
 
 extern std::vector<CefString> gDroppedFiles;
-
+#include<iostream>
 namespace appshell_extensions {
 
 class ProcessMessageDelegate : public ClientHandler::ProcessMessageDelegate {
@@ -46,6 +46,10 @@ public:
     {
     }
 
+    static long long int readDirCount;
+    static long long int getFileInfoCount;
+    static long long int getFileInFolderInfoCount;
+    
     // From ClientHandler::ProcessMessageDelegate.
     virtual bool OnProcessMessageReceived(
                       CefRefPtr<ClientHandler> handler,
@@ -117,6 +121,9 @@ public:
             //  3: string - title
             //  4: string - initialPath
             //  5: string - fileTypes (space-delimited string)
+            getFileInfoCount = 0;
+            getFileInFolderInfoCount = 0;
+            readDirCount= 0;
             if (argList->GetSize() != 6 ||
                 argList->GetType(1) != VTYPE_BOOL ||
                 argList->GetType(2) != VTYPE_BOOL ||
@@ -217,6 +224,8 @@ public:
             // Set response args for this function
             responseArgs->SetBool(2, isRemote);
         } else if (message_name == "ReadDir") {
+            readDirCount++;
+            std::cout<<"ReadDirCount  "<<readDirCount<<std::endl;
             // Parameters:
             //  0: int32 - callback id
             //  1: string - directory path
@@ -231,6 +240,26 @@ public:
                 ExtensionString path = argList->GetString(1);
                 
                 error = ReadDir(path, directoryContents);
+            }
+            
+            // Set response args for this function
+            responseArgs->SetList(2, directoryContents);
+        } else if (message_name == "GetFileInFolderInfo") {
+            getFileInFolderInfoCount++;
+            std::cout<<"GetFileInFolderInfoCount  "<<getFileInFolderInfoCount<<std::endl;
+            // Parameters:
+            //  0: int32 - callback id
+            //  1: string - directory path
+            if (argList->GetSize() != 2 ||
+                argList->GetType(1) != VTYPE_STRING) {
+                error = ERR_INVALID_PARAMS;
+            }
+            
+            CefRefPtr<CefListValue> directoryContents = CefListValue::Create();
+            
+            if (error == NO_ERROR) {
+                ExtensionString path = argList->GetString(1);
+                error = GetFileInFolderInfo(path, directoryContents);
             }
             
             // Set response args for this function
@@ -272,6 +301,8 @@ public:
             }
           // No additional response args for this function
         } else if (message_name == "GetFileInfo") {
+            getFileInfoCount++;
+            std::cout<<"GetFileInfoCount  "<<getFileInfoCount<<std::endl;
             // Parameters:
             //  0: int32 - callback id
             //  1: string - filename
@@ -865,5 +896,7 @@ public:
 void CreateProcessMessageDelegates(ClientHandler::ProcessMessageDelegateSet& delegates) {
     delegates.insert(new ProcessMessageDelegate);
 }
-
+    long long int ProcessMessageDelegate::getFileInfoCount = 0;
+    long long int ProcessMessageDelegate::getFileInFolderInfoCount = 0;
+    long long int ProcessMessageDelegate::readDirCount = 0;
 } // namespace appshell_extensions

@@ -174,6 +174,8 @@ int32 IsNetworkDrive(ExtensionString path, bool& isRemote);
 
 int32 ReadDir(ExtensionString path, CefRefPtr<CefListValue>& directoryContents);
 
+int32 GetFileInFolderInfo(ExtensionString path, CefRefPtr<CefListValue>& directoryContents);
+
 int32 MakeDir(ExtensionString path, int32 mode);
 
 int32 Rename(ExtensionString oldName, ExtensionString newName);

@@ -567,7 +567,11 @@ if (!brackets) {
             OpenLiveBrowser(callback || _dummyCallback, url, enableRemoteDebugging);
         }, 0);
     };
-    
+ 
+    native function GetFileInFolderInfo();
+     appshell.fs.getFileInFolderInfo = function (path, callback) {
+        GetFileInFolderInfo(callback, path);
+     };
     /**
      * Attempts to close the live browser. The browser can still give the user a chance to override
      * the close attempt if there is a page with unsaved changes. This function will fire the
